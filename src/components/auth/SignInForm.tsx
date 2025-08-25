@@ -1,5 +1,5 @@
 import { DarkThemeToggle, Label, TextInput } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -17,28 +17,52 @@ export const Signin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [toastVisible, setToastVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
-    setTimeout(() => {
-      setLoading(false);
-      if (formData.email === "" || formData.password === "") {
-        setError("Email and password are required.");
-      } else {
-        setError("");
-        setToastVisible(true);
+    try {
+      const response = await fetch("http://localhost:4000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid credentials");
       }
-    }, 2000);
+
+      //  Save JWT token (adjust based on backend)
+      localStorage.setItem("token", data.token);
+
+      setToastVisible(true);
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (toastVisible) {
-    setTimeout(() => setToastVisible(false), 3000);
-  }
+  useEffect(() => {
+    if (toastVisible) {
+      const timer = setTimeout(() => setToastVisible(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastVisible]);
 
   return (
     <div
@@ -144,8 +168,10 @@ export const Signin = () => {
                   {loading ? "Signing in..." : "Login"}
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   className="flex w-full items-center justify-center gap-2 rounded-lg font-medium"
+                  onClick={() => alert("Google login not implemented yet")}
                 >
                   <img
                     src="https://www.svgrepo.com/show/355037/google.svg"
@@ -159,7 +185,8 @@ export const Signin = () => {
           </CardContent>
 
           <CardFooter className="text-center text-xs text-gray-500 dark:text-gray-400">
-            By signing in, you agree to our<span className="mx-0.5"></span>
+            By signing in, you agree to our
+            <span className="mx-0.5"></span>
             <Link to="/terms" className="underline hover:text-blue-600">
               Terms
             </Link>
@@ -169,6 +196,13 @@ export const Signin = () => {
             </Link>
           </CardFooter>
         </Card>
+
+        {/* Success Toast */}
+        {toastVisible && (
+          <div className="absolute bottom-6 animate-bounce rounded-lg bg-green-500 px-4 py-2 text-white shadow-md">
+            Login successfully! Redirecting...
+          </div>
+        )}
       </div>
     </div>
   );

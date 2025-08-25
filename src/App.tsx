@@ -9,6 +9,7 @@ import { Signup } from "./components/auth/SignUpForm";
 import NotFound from "./pages/others/NotFound";
 import Terms from "./pages/others/Terms";
 import { PrivacyPolicy } from "./pages/others/PrivacyPolicy";
+import { Dashboard } from "./pages/Dashboard/Dashboard";
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
       <Routes>
         {/* Default route redirects to Signin */}
         <Route path="/" element={<Navigate to="/signin" replace />} />
+
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Auth routes */}
         <Route path="/signin" element={<Signin />} />

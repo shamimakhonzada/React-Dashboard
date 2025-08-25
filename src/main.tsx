@@ -1,15 +1,13 @@
-import { initThemeMode } from "flowbite-react";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { ThemeInit } from "../.flowbite-react/init";
-import App from "./App.tsx";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 import "./index.css";
+import { AuthProvider } from "./contexts/AuthContext";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ThemeInit />
-    <App />
-  </StrictMode>,
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>,
 );
-
-initThemeMode();

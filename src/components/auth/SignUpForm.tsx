@@ -11,44 +11,68 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Eye, EyeClosed } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Signup = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      setLoading(false);
-      const { firstName, lastName, email, password, confirmPassword } =
-        formData;
+    const { name, email, password, confirmPassword } = formData;
 
-      if (!firstName || !lastName || !email || !password || !confirmPassword) {
-        setError("All fields are required.");
-        return;
+    if (!name || !email || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:4000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
       }
 
-      if (password !== confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-      }
-
+      // Success
       setToastVisible(true);
-    }, 1500);
+
+      // Redirect after 2s
+      setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -98,33 +122,18 @@ export const Signup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* First & Last Name */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <TextInput
-                    id="firstName"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
-                    required
-                    shadow
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <TextInput
-                    id="lastName"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
-                    required
-                    shadow
-                  />
-                </div>
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <TextInput
+                  id="name"
+                  placeholder="Name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  required
+                  shadow
+                />
               </div>
 
               {/* Email */}
@@ -232,11 +241,11 @@ export const Signup = () => {
           </CardContent>
 
           <CardFooter className="text-center text-xs text-gray-500 dark:text-gray-400">
-            By signing in, you agree to our<span className="mx-0.5"></span>
+            By signing in, you agree to our{" "}
             <Link to="/terms" className="underline hover:text-blue-600">
               Terms
-            </Link>
-            <span className="mx-1">&</span>
+            </Link>{" "}
+            &{" "}
             <Link to="/privacy" className="underline hover:text-blue-600">
               Privacy Policy
             </Link>
@@ -246,7 +255,7 @@ export const Signup = () => {
         {/* Success Toast */}
         {toastVisible && (
           <div className="absolute bottom-6 animate-bounce rounded-lg bg-green-500 px-4 py-2 text-white shadow-md">
-            Account created successfully!
+            Account created successfully! Redirecting...
           </div>
         )}
       </div>
